@@ -1,5 +1,6 @@
 import { TransactionTable } from "@/components/transactions/transaction-table";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
+import { RecategorizeButton } from "@/components/transactions/recategorize-button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Upload } from "lucide-react";
 import { db } from "@/lib/db";
@@ -71,7 +72,10 @@ export default async function TransactionsPage({
             {totalCount} transaction{totalCount !== 1 ? "s" : ""} found
           </p>
         </div>
-        <DateRangePicker />
+        <div className="flex items-center gap-2">
+          <RecategorizeButton userId={DEFAULT_USER_ID} />
+          <DateRangePicker />
+        </div>
       </div>
 
       {txList.length > 0 ? (

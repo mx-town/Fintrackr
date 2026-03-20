@@ -1,5 +1,6 @@
 import { EmptyState } from "@/components/shared/empty-state";
 import { ReviewQueue } from "@/components/transactions/review-queue";
+import { RecategorizeButton } from "@/components/transactions/recategorize-button";
 import { getTransactionsForReview } from "@/actions/transactions";
 import { getCategories } from "@/actions/categories";
 import { ensureDb, DEFAULT_USER_ID } from "@/lib/db/init";
@@ -17,13 +18,16 @@ export default async function ReviewPage() {
 
   return (
     <div className="space-y-6 p-6 lg:p-8">
-      <div>
-        <h1 className="font-heading text-2xl font-bold tracking-tight">
-          Review Queue
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Transactions the AI is unsure about &middot; {reviewTxs.length} items
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-heading text-2xl font-bold tracking-tight">
+            Review Queue
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Transactions the AI is unsure about &middot; {reviewTxs.length} items
+          </p>
+        </div>
+        <RecategorizeButton userId={DEFAULT_USER_ID} />
       </div>
 
       {reviewTxs.length === 0 ? (

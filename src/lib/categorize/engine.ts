@@ -44,7 +44,7 @@ async function buildUserContext(userId: string): Promise<string | undefined> {
         inArray(txTable.categorySource, ["user", "rule"])
       )
     )
-    .groupBy(txTable.counterpartyName, txTable.categoryId)
+    .groupBy(txTable.counterpartyName, txTable.description, categories.name, txTable.categoryId)
     .orderBy(sql`COUNT(*) DESC`)
     .limit(30);
 
@@ -135,23 +135,55 @@ export async function categorizeTransactions(
       continue;
     }
 
+    // --- Heuristic: income defaults to cat_income, transfers to cat_other ---
+    if (tx.type === "income") {
+      results.push({
+        id: tx.id,
+        categoryId: "cat_income",
+        confidence: 0.7,
+        source: "keyword",
+      });
+      continue;
+    }
+    if (tx.type === "transfer") {
+      results.push({
+        id: tx.id,
+        categoryId: "cat_savings",
+        confidence: 0.5,
+        source: "keyword",
+      });
+      continue;
+    }
+
     // --- Tier 3: Queue for LLM ---
     uncategorized.push(tx);
   }
 
   // Batch LLM categorization for remaining
   if (uncategorized.length > 0) {
-    // Build user context from past categorizations
-    const userContext = await buildUserContext(userId);
+    try {
+      const userContext = await buildUserContext(userId);
 
-    for (let i = 0; i < uncategorized.length; i += 50) {
-      const batch = uncategorized.slice(i, i + 50);
-      const llmResults = await categorizeWithLLM(batch, userContext);
-      for (const r of llmResults) {
+      for (let i = 0; i < uncategorized.length; i += 50) {
+        const batch = uncategorized.slice(i, i + 50);
+        const llmResults = await categorizeWithLLM(batch, userContext);
+        for (const r of llmResults) {
+          results.push({
+            id: r.id,
+            categoryId: r.categoryId,
+            confidence: r.confidence,
+            source: "ai",
+          });
+        }
+      }
+    } catch (err) {
+      console.error("[Categorize] LLM categorization failed, using fallback:", err);
+      // Fallback: assign cat_other with 0.0 confidence so they appear in review queue
+      for (const tx of uncategorized) {
         results.push({
-          id: r.id,
-          categoryId: r.categoryId,
-          confidence: r.confidence,
+          id: tx.id,
+          categoryId: "cat_other",
+          confidence: 0.0,
           source: "ai",
         });
       }
