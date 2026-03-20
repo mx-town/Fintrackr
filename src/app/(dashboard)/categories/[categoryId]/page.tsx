@@ -90,16 +90,28 @@ export default async function CategoryDetailPage({
       )
     );
 
-  // KPIs
-  const expenses = currentTx.filter((t) => t.type === "expense");
-  const totalCents = expenses.reduce((s, t) => s + t.amountCents, 0);
-  const txCount = expenses.length;
-  const prevTotalCents = prevTx
+  // KPIs — count both income and expense (skip transfers)
+  const nonTransfer = currentTx.filter((t) => t.type !== "transfer");
+  const expenseCents = nonTransfer
     .filter((t) => t.type === "expense")
     .reduce((s, t) => s + t.amountCents, 0);
+  const incomeCents = nonTransfer
+    .filter((t) => t.type === "income")
+    .reduce((s, t) => s + t.amountCents, 0);
+  const totalActivity = expenseCents + incomeCents;
+  const txCount = nonTransfer.length;
+
+  const prevNonTransfer = prevTx.filter((t) => t.type !== "transfer");
+  const prevExpenseCents = prevNonTransfer
+    .filter((t) => t.type === "expense")
+    .reduce((s, t) => s + t.amountCents, 0);
+  const prevIncomeCents = prevNonTransfer
+    .filter((t) => t.type === "income")
+    .reduce((s, t) => s + t.amountCents, 0);
+  const prevTotalActivity = prevExpenseCents + prevIncomeCents;
   const pctChange =
-    prevTotalCents > 0
-      ? ((totalCents - prevTotalCents) / prevTotalCents) * 100
+    prevTotalActivity > 0
+      ? ((totalActivity - prevTotalActivity) / prevTotalActivity) * 100
       : null;
 
   // Last 6 months for trend chart
@@ -111,7 +123,6 @@ export default async function CategoryDetailPage({
       and(
         eq(transactions.userId, DEFAULT_USER_ID),
         inArray(transactions.categoryId, categoryIds),
-        eq(transactions.type, "expense"),
         gte(transactions.date, sixMonthsAgo),
         isNull(transactions.deletedAt)
       )
@@ -131,9 +142,9 @@ export default async function CategoryDetailPage({
     monthlyData.push({ month: key, total: monthlyMap.get(key) ?? 0 });
   }
 
-  // Top merchants
+  // Top merchants (include both income and expense, skip transfers)
   const merchantMap = new Map<string, number>();
-  for (const tx of expenses) {
+  for (const tx of nonTransfer) {
     const name = tx.counterpartyName || tx.description;
     merchantMap.set(name, (merchantMap.get(name) ?? 0) + tx.amountCents);
   }
@@ -194,7 +205,12 @@ export default async function CategoryDetailPage({
           </div>
           <p className="text-sm text-muted-foreground mt-0.5">
             {category.nameDE ? `${category.nameDE} · ` : ""}
-            {formatCurrency(totalCents)} total · {periodLabel}
+            {expenseCents > 0 && incomeCents > 0
+              ? `${formatCurrency(expenseCents)} spent · ${formatCurrency(incomeCents)} earned`
+              : incomeCents > 0
+                ? `${formatCurrency(incomeCents)} earned`
+                : `${formatCurrency(expenseCents)} spent`}
+            {" · "}{periodLabel}
             {childCats.length > 0 &&
               ` · includes ${childCats.map((c) => c.name).join(", ")}`}
           </p>
@@ -206,15 +222,24 @@ export default async function CategoryDetailPage({
         <div className="rounded-2xl border border-border/50 bg-card p-5">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Total Spent
+              {incomeCents > 0 && expenseCents === 0 ? "Total Earned" : "Total Spent"}
             </p>
-            <div className="rounded-xl p-2 bg-rose-500/15">
-              <TrendingDown className="h-4 w-4 text-[var(--color-expense)]" strokeWidth={2} />
+            <div className={`rounded-xl p-2 ${incomeCents > 0 && expenseCents === 0 ? "bg-emerald-500/15" : "bg-rose-500/15"}`}>
+              {incomeCents > 0 && expenseCents === 0 ? (
+                <TrendingUp className="h-4 w-4 text-[var(--color-income)]" strokeWidth={2} />
+              ) : (
+                <TrendingDown className="h-4 w-4 text-[var(--color-expense)]" strokeWidth={2} />
+              )}
             </div>
           </div>
-          <p className="text-2xl font-heading font-bold font-mono-nums text-[var(--color-expense)]">
-            {formatCurrency(totalCents)}
+          <p className={`text-2xl font-heading font-bold font-mono-nums ${incomeCents > 0 && expenseCents === 0 ? "text-[var(--color-income)]" : "text-[var(--color-expense)]"}`}>
+            {formatCurrency(incomeCents > 0 && expenseCents === 0 ? incomeCents : expenseCents)}
           </p>
+          {incomeCents > 0 && expenseCents > 0 && (
+            <p className="mt-1 text-sm font-mono-nums text-[var(--color-income)]">
+              +{formatCurrency(incomeCents)} earned
+            </p>
+          )}
         </div>
 
         <div className="rounded-2xl border border-border/50 bg-card p-5">
@@ -261,7 +286,7 @@ export default async function CategoryDetailPage({
           </p>
           {pctChange !== null && (
             <p className="mt-1 text-xs text-muted-foreground">
-              was {formatCurrency(prevTotalCents)}
+              was {formatCurrency(prevTotalActivity)}
             </p>
           )}
         </div>
