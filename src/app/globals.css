@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", ui-monospace, monospace;
+  --font-heading: "Segoe UI", system-ui, -apple-system, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -72,7 +72,7 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -84,37 +84,38 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Obsidian Vault — deep blacks with warm undertone */
+  --background: oklch(0.11 0.005 270);
+  --foreground: oklch(0.93 0.005 80);
+  --card: oklch(0.155 0.005 270);
+  --card-foreground: oklch(0.93 0.005 80);
+  --popover: oklch(0.155 0.005 270);
+  --popover-foreground: oklch(0.93 0.005 80);
+  --primary: oklch(0.72 0.19 160);
+  --primary-foreground: oklch(0.13 0.01 160);
+  --secondary: oklch(0.2 0.008 270);
+  --secondary-foreground: oklch(0.88 0.005 80);
+  --muted: oklch(0.2 0.008 270);
+  --muted-foreground: oklch(0.55 0.01 80);
+  --accent: oklch(0.2 0.015 270);
+  --accent-foreground: oklch(0.93 0.005 80);
+  --destructive: oklch(0.65 0.2 25);
+  --border: oklch(0.24 0.01 270);
+  --input: oklch(0.22 0.01 270);
+  --ring: oklch(0.72 0.19 160);
+  --chart-1: oklch(0.72 0.19 160);
+  --chart-2: oklch(0.65 0.15 200);
+  --chart-3: oklch(0.7 0.16 55);
+  --chart-4: oklch(0.6 0.18 300);
+  --chart-5: oklch(0.55 0.12 30);
+  --sidebar: oklch(0.125 0.006 270);
+  --sidebar-foreground: oklch(0.88 0.005 80);
+  --sidebar-primary: oklch(0.72 0.19 160);
+  --sidebar-primary-foreground: oklch(0.13 0.01 160);
+  --sidebar-accent: oklch(0.18 0.015 270);
+  --sidebar-accent-foreground: oklch(0.93 0.005 80);
+  --sidebar-border: oklch(0.22 0.01 270);
+  --sidebar-ring: oklch(0.72 0.19 160);
 }
 
 @layer base {
@@ -128,3 +129,233 @@
     @apply font-sans;
   }
 }
+
+/* Finance-specific semantic colors — richer, more vibrant */
+:root {
+  --color-income: #34d399;
+  --color-expense: #fb7185;
+  --color-savings: #60a5fa;
+  --color-warning: #fbbf24;
+  --color-neutral: #94a3b8;
+
+  /* Category colors — vivid, distinct */
+  --cat-food: #fb923c;
+  --cat-transport: #60a5fa;
+  --cat-housing: #a78bfa;
+  --cat-utilities: #22d3ee;
+  --cat-entertainment: #f472b6;
+  --cat-shopping: #fbbf24;
+  --cat-health: #34d399;
+  --cat-education: #818cf8;
+  --cat-travel: #2dd4bf;
+  --cat-subscriptions: #c084fc;
+  --cat-income: #34d399;
+  --cat-other: #94a3b8;
+}
+
+/* Tabular numbers for financial data */
+.font-mono-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Grain texture overlay */
+.grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* Glass card effect */
+.glass {
+  background: oklch(0.16 0.005 270 / 60%);
+  backdrop-filter: blur(20px) saturate(1.2);
+  border: 1px solid oklch(1 0 0 / 6%);
+}
+
+.glass-subtle {
+  background: oklch(0.16 0.005 270 / 40%);
+  backdrop-filter: blur(12px) saturate(1.1);
+  border: 1px solid oklch(1 0 0 / 4%);
+}
+
+/* Glow effects */
+.glow-emerald {
+  box-shadow:
+    0 0 20px oklch(0.72 0.19 160 / 15%),
+    0 0 60px oklch(0.72 0.19 160 / 5%);
+}
+
+.glow-rose {
+  box-shadow:
+    0 0 20px oklch(0.65 0.2 25 / 15%),
+    0 0 60px oklch(0.65 0.2 25 / 5%);
+}
+
+/* Animated gradient border */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    oklch(0.72 0.19 160 / 40%),
+    oklch(0.65 0.15 200 / 20%),
+    oklch(0.7 0.16 55 / 30%),
+    oklch(0.72 0.19 160 / 40%)
+  );
+  background-size: 300% 300%;
+  animation: gradient-shift 8s ease infinite;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Smooth page transitions */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s ease-out both;
+}
+
+/* Staggered children animation */
+.stagger-children > * {
+  animation: fade-up 0.4s ease-out both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 360ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 420ms; }
+
+/* Sidebar nav hover glow */
+.nav-glow {
+  position: relative;
+  transition: all 0.2s ease;
+}
+.nav-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  background: radial-gradient(
+    ellipse at 0% 50%,
+    oklch(0.72 0.19 160 / 10%) 0%,
+    transparent 70%
+  );
+  transition: opacity 0.2s ease;
+}
+.nav-glow:hover::before {
+  opacity: 1;
+}
+
+/* KPI card shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-bg {
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    oklch(1 0 0 / 3%) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 6s ease-in-out infinite;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.3 0.01 270);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.4 0.01 270);
+}
+
+/* Tremor / Recharts overrides for dark theme */
+.dark .tremor-content {
+  color: oklch(0.55 0.01 80) !important;
+}
+
+/* Recharts axis tick labels */
+.dark .recharts-cartesian-axis-tick-value {
+  fill: oklch(0.45 0.01 80) !important;
+  font-family: "Cascadia Code", "Fira Code", ui-monospace, monospace !important;
+  font-size: 11px !important;
+}
+
+/* Recharts grid lines */
+.dark .recharts-cartesian-grid-horizontal line,
+.dark .recharts-cartesian-grid-vertical line {
+  stroke: oklch(0.2 0.005 270) !important;
+  stroke-dasharray: 3 3 !important;
+}
+
+/* Recharts tooltip cursor */
+.dark .recharts-tooltip-cursor {
+  stroke: oklch(0.72 0.19 160 / 30%) !important;
+}
+
+/* Tremor default tooltip override */
+.dark [class*="tremor-tooltip"] {
+  --tw-bg-opacity: 1;
+  background: oklch(0.14 0.005 270 / 95%) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid oklch(1 0 0 / 8%) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 8px 32px oklch(0 0 0 / 40%) !important;
+}
+
+/* Recharts legend text */
+.dark .recharts-legend-item-text {
+  color: oklch(0.55 0.01 80) !important;
+  font-size: 12px !important;
+}
+
+/* Chart stagger animation for dashboard sections */
+.chart-stagger > * {
+  animation: fade-up 0.5s ease-out both;
+}
+.chart-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.chart-stagger > *:nth-child(2) { animation-delay: 100ms; }
+.chart-stagger > *:nth-child(3) { animation-delay: 200ms; }
+.chart-stagger > *:nth-child(4) { animation-delay: 300ms; }
+.chart-stagger > *:nth-child(5) { animation-delay: 400ms; }
+.chart-stagger > *:nth-child(6) { animation-delay: 500ms; }
