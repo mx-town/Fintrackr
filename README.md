@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💰 Fintrackr — Personal Finance Tracker
+
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![SQLite](https://img.shields.io/badge/SQLite-Local-003B57?logo=sqlite)](https://sqlite.org)
+
+A personal finance tracking application with an offline-first architecture. All data stays on your machine — no cloud, no accounts, no subscriptions.
+
+---
+
+## Features
+
+- **Transaction tracking** — log income and expenses with categories
+- **Local SQLite database** — all data stored on disk via Drizzle ORM
+- **No cloud dependencies** — runs entirely offline after install
+- **Clean UI** — built with shadcn/ui components and Tailwind CSS
+- **Docker support** — containerized deployment available
+
+---
+
+## Tech Stack
+
+| Technology | Purpose |
+|------------|---------|
+| Next.js 15 | App Router, server components |
+| TypeScript | Type safety |
+| Drizzle ORM | Database queries & migrations |
+| SQLite | Local data storage (`.data/fintrackr.db`) |
+| Tailwind CSS | Styling |
+| shadcn/ui | UI component library |
+
+---
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Install dependencies
+npm install
+
+# Run database migrations
+npx drizzle-kit push
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Docker
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+docker build -t fintrackr .
+docker run -p 3000:3000 -v fintrackr-data:/app/.data fintrackr
+```
 
-## Learn More
+The `-v` flag persists your database across container restarts.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+Fintrackr/
+├── src/
+│   ├── app/              # Next.js app router pages
+│   ├── components/       # React components
+│   └── lib/
+│       └── db/
+│           └── schema.ts # Drizzle database schema
+├── drizzle.config.ts     # Drizzle ORM configuration
+├── Dockerfile            # Container setup
+└── .data/                # SQLite database (gitignored)
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
