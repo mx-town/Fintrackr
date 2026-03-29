@@ -314,6 +314,14 @@
   color: oklch(0.55 0.01 80) !important;
 }
 
+/* Remove focus outline on Recharts elements */
+.recharts-wrapper,
+.recharts-surface,
+.recharts-wrapper *:focus,
+.recharts-wrapper *:focus-visible {
+  outline: none !important;
+}
+
 /* Recharts axis tick labels */
 .dark .recharts-cartesian-axis-tick-value {
   fill: oklch(0.45 0.01 80) !important;

@@ -2,6 +2,7 @@
 
 import { formatCurrency } from "@/lib/utils";
 import { TrendingUp, TrendingDown, Wallet, PiggyBank } from "lucide-react";
+import type { DrilldownFilter } from "@/components/dashboard/transaction-drilldown";
 
 interface KPIData {
   type: string;
@@ -13,6 +14,8 @@ interface KPICardsProps {
   data: KPIData[];
   previousIncome?: number;
   previousExpenses?: number;
+  onDrilldown?: (filter: DrilldownFilter) => void;
+  dateRange?: { start: string; end: string };
 }
 
 function PctBadge({ current, previous }: { current: number; previous: number }) {
@@ -31,7 +34,7 @@ function PctBadge({ current, previous }: { current: number; previous: number }) 
   );
 }
 
-export function KPICards({ data, previousIncome, previousExpenses }: KPICardsProps) {
+export function KPICards({ data, previousIncome, previousExpenses, onDrilldown, dateRange }: KPICardsProps) {
   const income = data.find((d) => d.type === "income")?.total ?? 0;
   const expenses = data.find((d) => d.type === "expense")?.total ?? 0;
   const incomeCount = data.find((d) => d.type === "income")?.count ?? 0;
@@ -54,6 +57,15 @@ export function KPICards({ data, previousIncome, previousExpenses }: KPICardsPro
         previousIncome != null ? (
           <IncBadge current={income} previous={previousIncome} />
         ) : null,
+      clickable: true,
+      onClick: () =>
+        onDrilldown?.({
+          title: "Income",
+          subtitle: `${incomeCount} income transactions`,
+          type: "income",
+          startDate: dateRange?.start ?? "",
+          endDate: dateRange?.end ?? "",
+        }),
     },
     {
       title: "Expenses",
@@ -69,6 +81,15 @@ export function KPICards({ data, previousIncome, previousExpenses }: KPICardsPro
         previousExpenses != null ? (
           <PctBadge current={expenses} previous={previousExpenses} />
         ) : null,
+      clickable: true,
+      onClick: () =>
+        onDrilldown?.({
+          title: "Expenses",
+          subtitle: `${expenseCount} expense transactions`,
+          type: "expense",
+          startDate: dateRange?.start ?? "",
+          endDate: dateRange?.end ?? "",
+        }),
     },
     {
       title: "Net Savings",
@@ -121,7 +142,8 @@ export function KPICards({ data, previousIncome, previousExpenses }: KPICardsPro
       {cards.map((card) => (
         <div
           key={card.title}
-          className={`group relative overflow-hidden rounded-2xl border ${card.borderColor} bg-card p-5 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg shimmer-bg`}
+          className={`group relative overflow-hidden rounded-2xl border ${card.borderColor} bg-card p-5 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg shimmer-bg ${"clickable" in card && card.clickable ? "cursor-pointer" : ""}`}
+          onClick={"onClick" in card ? card.onClick : undefined}
         >
           {/* Gradient background */}
           <div

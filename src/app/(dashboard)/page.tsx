@@ -1,8 +1,4 @@
-import { KPICards } from "@/components/dashboard/kpi-cards";
-import { SpendingDonut } from "@/components/dashboard/spending-donut";
-import { MonthlyBar } from "@/components/dashboard/monthly-bar";
-import { TrendArea } from "@/components/dashboard/trend-area";
-import { RecentTransactions } from "@/components/dashboard/recent-transactions";
+import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Upload } from "lucide-react";
@@ -201,6 +197,19 @@ export default async function DashboardPage({
 
   const periodLabel = `${format(startDate, "MMM d")} - ${format(endDate, "MMM d, yyyy")}`;
 
+  // Serialize period ranges as ISO strings for the client component
+  const serializedPeriodRanges = {
+    month: { start: periodRanges.month.start.toISOString(), end: periodRanges.month.end.toISOString() },
+    "3m": { start: periodRanges["3m"].start.toISOString(), end: periodRanges["3m"].end.toISOString() },
+    ytd: { start: periodRanges.ytd.start.toISOString(), end: periodRanges.ytd.end.toISOString() },
+    year: { start: periodRanges.year.start.toISOString(), end: periodRanges.year.end.toISOString() },
+  };
+
+  const defaultDateRange = {
+    start: startDate.toISOString(),
+    end: endDate.toISOString(),
+  };
+
   return (
     <div className="space-y-6 p-6 lg:p-8 chart-stagger">
       <div className="flex items-center justify-between">
@@ -215,20 +224,19 @@ export default async function DashboardPage({
         <DateRangePicker />
       </div>
 
-      <KPICards
-        data={totals}
+      <DashboardCharts
+        userId={DEFAULT_USER_ID}
+        totals={totals}
         previousIncome={previousIncome}
         previousExpenses={previousExpenses}
+        byCategory={byCategory}
+        periodByCategory={periodByCategory}
+        dailySpending={dailySpending}
+        periodDailySpending={periodDailySpending}
+        recent={recent}
+        periodRanges={serializedPeriodRanges}
+        defaultDateRange={defaultDateRange}
       />
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <SpendingDonut data={byCategory} periodData={periodByCategory} />
-        <TrendArea data={dailySpending} periodData={periodDailySpending} />
-      </div>
-
-      <MonthlyBar data={byCategory} periodData={periodByCategory} />
-
-      <RecentTransactions transactions={recent} />
     </div>
   );
 }

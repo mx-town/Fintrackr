@@ -71,7 +71,7 @@ export function CategoryDialog({ mode, initial, trigger, onSubmit }: CategoryDia
 
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
-      <DialogTrigger render={<span />}>
+      <DialogTrigger render={<span />} nativeButton={false}>
         {trigger}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

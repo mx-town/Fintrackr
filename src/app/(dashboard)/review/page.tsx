@@ -24,7 +24,7 @@ export default async function ReviewPage() {
             Review Queue
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Transactions the AI is unsure about &middot; {reviewTxs.length} items
+            Uncategorized &amp; low-confidence transactions &middot; {reviewTxs.length} items
           </p>
         </div>
         <RecategorizeButton userId={DEFAULT_USER_ID} />

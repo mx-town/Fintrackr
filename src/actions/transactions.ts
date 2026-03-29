@@ -76,8 +76,10 @@ export async function updateTransactionCategory(
 }
 
 /**
- * Get transactions with low confidence that need user review.
- * Includes AI-categorized transactions with confidence <= 0.6.
+ * Get transactions that need user review.
+ * Includes uncategorized transactions (NULL categoryId) and
+ * AI/keyword-categorized transactions with confidence <= 0.6.
+ * Uncategorized transactions sort first (highest priority).
  */
 export async function getTransactionsForReview(userId: string) {
   return db
@@ -91,15 +93,74 @@ export async function getTransactionsForReview(userId: string) {
       and(
         eq(transactions.userId, userId),
         isNull(transactions.deletedAt),
-        lte(transactions.categoryConfidence, 0.6),
         or(
-          eq(transactions.categorySource, "ai"),
-          eq(transactions.categorySource, "keyword")
+          isNull(transactions.categoryId),
+          and(
+            lte(transactions.categoryConfidence, 0.6),
+            or(
+              eq(transactions.categorySource, "ai"),
+              eq(transactions.categorySource, "keyword")
+            )
+          )
         )
       )
     )
-    .orderBy(transactions.categoryConfidence, desc(transactions.date))
+    .orderBy(
+      sql`CASE WHEN ${transactions.categoryId} IS NULL THEN 0 ELSE 1 END`,
+      transactions.categoryConfidence,
+      desc(transactions.date)
+    )
     .limit(50);
+}
+
+/**
+ * Count how many other transactions match a given transaction
+ * by counterpartyName or normalized description.
+ */
+export async function countMatchingTransactions(
+  userId: string,
+  transactionId: string
+): Promise<{ count: number; matchedBy: string }> {
+  const [tx] = await db
+    .select()
+    .from(transactions)
+    .where(
+      and(eq(transactions.id, transactionId), eq(transactions.userId, userId))
+    )
+    .limit(1);
+
+  if (!tx) return { count: 0, matchedBy: "" };
+
+  const matchConditions = [];
+  let matchedBy = "";
+
+  if (tx.counterpartyName) {
+    matchConditions.push(eq(transactions.counterpartyName, tx.counterpartyName));
+    matchedBy = "counterparty";
+  }
+
+  const normalized = normalizeMerchant(tx.description);
+  if (normalized && normalized.length >= 3) {
+    matchConditions.push(like(transactions.description, `%${normalized}%`));
+    if (!matchedBy) matchedBy = "description";
+    else matchedBy = "counterparty & description";
+  }
+
+  if (matchConditions.length === 0) return { count: 0, matchedBy: "" };
+
+  const [result] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.userId, userId),
+        isNull(transactions.deletedAt),
+        ne(transactions.id, transactionId),
+        or(...matchConditions)
+      )
+    );
+
+  return { count: Number(result.count), matchedBy };
 }
 
 /**
