@@ -44,8 +44,8 @@ export function BudgetScorecard({ score }: BudgetScorecardProps) {
   const styles = SCORE_STYLES[overallColor];
 
   return (
-    <div className="space-y-4">
-      {/* Overall Score */}
+    <>
+      {/* Card 1: Overall Score */}
       <div
         className={cn(
           "relative overflow-hidden rounded-xl border p-6 text-center",
@@ -67,49 +67,54 @@ export function BudgetScorecard({ score }: BudgetScorecardProps) {
         </div>
       </div>
 
-      {/* Per-Tier Scores */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {score.tiers.map((tierScore) => {
-          const color = getScoreColor(tierScore.score);
-          const tierStyles = SCORE_STYLES[color];
-          const Icon = TIER_ICONS[tierScore.tier];
+      {/* Card 2: Per-Tier Scores */}
+      <div className="rounded-xl border border-border/50 bg-card p-4">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
+          Score by Tier
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {score.tiers.map((tierScore) => {
+            const color = getScoreColor(tierScore.score);
+            const tierStyles = SCORE_STYLES[color];
+            const Icon = TIER_ICONS[tierScore.tier];
 
-          return (
-            <div
-              key={tierScore.tier}
-              className={cn(
-                "rounded-lg border p-4",
-                tierStyles.bg,
-                tierStyles.border
-              )}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Icon className={cn("h-4 w-4", tierStyles.text)} />
-                <span className="text-sm font-medium">
-                  {TIER_LABELS[tierScore.tier]}
-                </span>
-              </div>
-              <div className={cn("text-3xl font-bold tabular-nums", tierStyles.text)}>
-                {tierScore.score}
-              </div>
-              <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                <div className="flex justify-between">
-                  <span>Target</span>
-                  <span>{tierScore.targetAdherence}/100</span>
+            return (
+              <div
+                key={tierScore.tier}
+                className={cn(
+                  "rounded-lg border p-4",
+                  tierStyles.bg,
+                  tierStyles.border
+                )}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className={cn("h-4 w-4", tierStyles.text)} />
+                  <span className="text-sm font-medium">
+                    {TIER_LABELS[tierScore.tier]}
+                  </span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Trend</span>
-                  <span>{tierScore.trend}/100</span>
+                <div className={cn("text-3xl font-bold tabular-nums", tierStyles.text)}>
+                  {tierScore.score}
                 </div>
-                <div className="flex justify-between">
-                  <span>Targets</span>
-                  <span>{tierScore.customTargetCompliance}/100</span>
+                <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>Target</span>
+                    <span>{tierScore.targetAdherence}/100</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Trend</span>
+                    <span>{tierScore.trend}/100</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Targets</span>
+                    <span>{tierScore.customTargetCompliance}/100</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
