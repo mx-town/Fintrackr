@@ -47,13 +47,14 @@ export default async function OptimizerPage({
         tier = "wants";
       }
 
+      const catId = cat.categoryId ?? "";
       simulatorCategories.push({
-        categoryId: cat.categoryId,
-        categoryName: cat.categoryName,
+        categoryId: catId,
+        categoryName: cat.categoryName ?? "Unknown",
         categoryIcon: cat.categoryIcon ?? null,
         tier,
-        actualCents: cat.amountCents,
-        targetCents: targetMap.get(cat.categoryId) ?? null,
+        actualCents: cat.amount,
+        targetCents: catId ? (targetMap.get(catId) ?? null) : null,
       });
     }
   }

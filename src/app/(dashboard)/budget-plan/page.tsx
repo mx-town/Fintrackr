@@ -57,15 +57,15 @@ export default async function BudgetPlanPage({
             tier = "wants";
           }
           const entry = tierMap.get(tier)!;
-          entry.amountCents += cat.amountCents;
+          entry.amountCents += cat.amount;
           entry.categories.push({
-            categoryId: cat.categoryId,
-            categoryName: cat.categoryName,
+            categoryId: cat.categoryId ?? "",
+            categoryName: cat.categoryName ?? "Unknown",
             categoryIcon: cat.categoryIcon ?? null,
-            amountCents: cat.amountCents,
+            amountCents: cat.amount,
             pctOfIncome:
               data.income > 0
-                ? Math.round((cat.amountCents / data.income) * 1000) / 10
+                ? Math.round((cat.amount / data.income) * 1000) / 10
                 : 0,
             counterparties: [],
           });
@@ -81,7 +81,7 @@ export default async function BudgetPlanPage({
                 ? Math.round((entry.amountCents / data.income) * 1000) / 10
                 : 0,
             categories: entry.categories.sort(
-              (a, b) => b.amountCents - a.amountCents
+              (a, b) => b.amountCents - a.amountCents,
             ),
           };
         });
