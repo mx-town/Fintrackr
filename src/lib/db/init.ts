@@ -14,6 +14,7 @@ const DEFAULT_USER_EMAIL = "local@fintrackr.app";
 // Singleton to track initialization
 const globalInit = globalThis as unknown as {
   __fintrackr_db_initialized?: Promise<void>;
+  __fintrackr_migrations_done?: boolean;
 };
 
 async function initializeDatabase() {
@@ -224,10 +225,46 @@ async function initializeDatabase() {
   console.log("[DB] Initialized successfully (SQLite)");
 }
 
+/**
+ * Run incremental schema migrations (safe to call multiple times).
+ * These use ALTER TABLE which is idempotent via try/catch.
+ */
+function runMigrations() {
+  if (globalInit.__fintrackr_migrations_done) return;
+  try {
+    db.run(sql.raw(`ALTER TABLE categories ADD COLUMN budget_tier TEXT`));
+  } catch {
+    // Column already exists — ignore
+  }
+
+  // Migration: Add category_targets table
+  try {
+    db.run(sql.raw(`
+      CREATE TABLE IF NOT EXISTS category_targets (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        category_id TEXT NOT NULL,
+        amount_cents INTEGER NOT NULL,
+        period TEXT NOT NULL DEFAULT 'monthly',
+        created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+        updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+      )
+    `));
+    db.run(sql.raw(`CREATE INDEX IF NOT EXISTS category_targets_user_idx ON category_targets(user_id)`));
+    db.run(sql.raw(`CREATE INDEX IF NOT EXISTS category_targets_user_category_idx ON category_targets(user_id, category_id)`));
+  } catch (e) {
+    // Migration already applied
+  }
+
+  globalInit.__fintrackr_migrations_done = true;
+}
+
 export function ensureDb(): Promise<void> {
   if (!globalInit.__fintrackr_db_initialized) {
     globalInit.__fintrackr_db_initialized = Promise.resolve(initializeDatabase());
   }
+  // Migrations run separately so they apply even on hot reload
+  runMigrations();
   return globalInit.__fintrackr_db_initialized;
 }
 

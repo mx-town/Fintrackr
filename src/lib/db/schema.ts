@@ -91,6 +91,7 @@ export const categories = sqliteTable(
     color: text("color"),
     sortOrder: integer("sort_order").default(0),
     isSystem: integer("is_system", { mode: "boolean" }).default(false).notNull(),
+    budgetTier: text("budget_tier"),
     isHidden: integer("is_hidden", { mode: "boolean" }).default(false).notNull(),
     createdAt: integer("created_at", { mode: "timestamp" })
       .$defaultFn(() => new Date())
@@ -288,6 +289,33 @@ export const budgets = sqliteTable(
 );
 
 // ============================================================
+// CATEGORY TARGETS (user-defined spending targets per category)
+// ============================================================
+
+export const categoryTargets = sqliteTable(
+  "category_targets",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    userId: text("user_id").notNull(),
+    categoryId: text("category_id").notNull(),
+    amountCents: integer("amount_cents").notNull(),
+    period: text("period").notNull().default("monthly"),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (table) => [
+    index("category_targets_user_idx").on(table.userId),
+    index("category_targets_user_category_idx").on(table.userId, table.categoryId),
+  ]
+);
+
+// ============================================================
 // CATEGORIZATION RULES (user-defined + auto-learned)
 // ============================================================
 
@@ -417,3 +445,14 @@ export const transactionTagsRelations = relations(
     }),
   })
 );
+
+export const categoryTargetsRelations = relations(categoryTargets, ({ one }) => ({
+  user: one(users, {
+    fields: [categoryTargets.userId],
+    references: [users.id],
+  }),
+  category: one(categories, {
+    fields: [categoryTargets.categoryId],
+    references: [categories.id],
+  }),
+}));
