@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { transactions, categories } from "@/lib/db/schema";
 import { eq, and, gte, lte, sql, isNull, inArray } from "drizzle-orm";
+import { differenceInCalendarDays } from "date-fns";
 import {
   getCategoryTier,
   TIER_TARGETS,
@@ -158,7 +159,9 @@ export async function getBudgetInsights(
     count: row.count,
   }));
 
-  // 5. Daily budget calculation
+  // 5. Daily budget calculation. For periods that have already ended,
+  // daysLeft is 0 and dailyBudget is 0 — the "remaining per day" framing
+  // doesn't apply once the period is closed.
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endDay = new Date(
@@ -167,39 +170,42 @@ export async function getBudgetInsights(
     endDate.getDate()
   );
 
-  const daysLeft = Math.max(
-    1,
-    Math.ceil(
-      (endDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-    ) + 1
-  );
+  const daysLeft =
+    endDay >= today ? differenceInCalendarDays(endDay, today) + 1 : 0;
 
   // Ideal total expense budget = income * 80% (50 needs + 30 wants)
   const expenseBudget = income * 0.8;
   const remainingBudget = Math.max(0, expenseBudget - totalExpenses);
-  const dailyBudget = Math.round(remainingBudget / daysLeft);
+  const dailyBudget = daysLeft > 0 ? Math.round(remainingBudget / daysLeft) : 0;
 
-  // 6. Today's spending
-  const todayStart = today;
+  // 6. Today's spending — net of same-day refunds, matching how the
+  // period totals are computed
   const todayEnd = new Date(today);
   todayEnd.setHours(23, 59, 59, 999);
 
-  const todayRows = await db
+  const todayRawTx = await db
     .select({
-      total: sql<number>`SUM(${transactions.amountCents})`.as("total"),
+      id: transactions.id,
+      type: transactions.type,
+      amountCents: transactions.amountCents,
+      categoryId: transactions.categoryId,
+      counterpartyName: transactions.counterpartyName,
+      counterpartyIban: transactions.counterpartyIban,
     })
     .from(transactions)
     .where(
       and(
         eq(transactions.userId, userId),
-        eq(transactions.type, "expense"),
-        gte(transactions.date, todayStart),
+        gte(transactions.date, today),
         lte(transactions.date, todayEnd),
         isNull(transactions.deletedAt)
       )
     );
 
-  const todaySpending = todayRows[0]?.total ?? 0;
+  const todayNet = computeNetSpending(todayRawTx);
+  const todaySpending = [...todayNet.values()]
+    .filter((e) => e.netSpending > 0)
+    .reduce((sum, e) => sum + e.netSpending, 0);
 
   return {
     income,
