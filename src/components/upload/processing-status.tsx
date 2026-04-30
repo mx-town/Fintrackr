@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, ArrowRight } from "lucide-react";
+import { format } from "date-fns";
 
 interface UploadResult {
   success: boolean;
@@ -9,6 +11,8 @@ interface UploadResult {
   transactionCount?: number;
   duplicateCount?: number;
   bankDetected?: string;
+  periodStart?: string | null;
+  periodEnd?: string | null;
   warnings?: string[];
   errors?: string[];
   processingTimeMs?: number;
@@ -78,6 +82,10 @@ export function ProcessingStatus({ result }: { result: UploadResult | null }) {
         </div>
       )}
 
+      {result.success && result.periodStart && result.periodEnd && (
+        <DashboardLink periodStart={result.periodStart} periodEnd={result.periodEnd} />
+      )}
+
       {result.warnings && result.warnings.length > 0 && (
         <div className="mt-4 space-y-1.5">
           {result.warnings.map((w, i) => (
@@ -105,6 +113,33 @@ export function ProcessingStatus({ result }: { result: UploadResult | null }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function DashboardLink({
+  periodStart,
+  periodEnd,
+}: {
+  periodStart: string;
+  periodEnd: string;
+}) {
+  const from = periodStart.slice(0, 10); // YYYY-MM-DD
+  const to = periodEnd.slice(0, 10);
+  const label = `${format(new Date(periodStart), "MMM d")} – ${format(new Date(periodEnd), "MMM d, yyyy")}`;
+
+  return (
+    <div className="mt-4 flex flex-col gap-2 rounded-xl bg-card/50 p-4">
+      <p className="text-xs text-muted-foreground">
+        Transactions range: <span className="font-semibold text-foreground">{label}</span>
+      </p>
+      <Link
+        href={`/?from=${from}&to=${to}`}
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+      >
+        View on Dashboard
+        <ArrowRight className="h-3.5 w-3.5" />
+      </Link>
     </div>
   );
 }

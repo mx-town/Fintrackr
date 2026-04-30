@@ -11,6 +11,8 @@ interface UploadResult {
   transactionCount?: number;
   duplicateCount?: number;
   bankDetected?: string;
+  periodStart?: string | null;
+  periodEnd?: string | null;
   warnings?: string[];
   errors?: string[];
   processingTimeMs?: number;

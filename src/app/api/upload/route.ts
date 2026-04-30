@@ -131,6 +131,8 @@ export async function POST(request: NextRequest) {
       duplicateCount: duplicates,
       bankDetected: result.bankName,
       accountIban: result.accountIban,
+      periodStart: result.periodStart?.toISOString() ?? null,
+      periodEnd: result.periodEnd?.toISOString() ?? null,
       warnings: result.warnings,
       processingTimeMs: processingTime,
     });
