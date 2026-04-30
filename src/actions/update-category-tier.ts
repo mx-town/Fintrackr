@@ -2,13 +2,14 @@
 
 import { db } from "@/lib/db";
 import { categories } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import type { BudgetTier } from "@/lib/budget-plan/tiers";
 
 const VALID_TIERS: BudgetTier[] = ["needs", "wants", "savings"];
 
 export async function updateCategoryTier(
+  userId: string,
   categoryId: string,
   tier: BudgetTier
 ): Promise<{ success: boolean; error?: string }> {
@@ -19,7 +20,9 @@ export async function updateCategoryTier(
   await db
     .update(categories)
     .set({ budgetTier: tier })
-    .where(eq(categories.id, categoryId));
+    .where(
+      and(eq(categories.id, categoryId), eq(categories.userId, userId))
+    );
 
   revalidatePath("/budget-plan");
 

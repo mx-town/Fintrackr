@@ -117,15 +117,14 @@ export async function getBudgetInsights(
 
   const totalExpenses = byCategory.reduce((sum, r) => sum + r.total, 0);
 
-  // 3. Aggregate by tier
+  // 3. Aggregate by tier — "other" tier is intentionally excluded so percentages
+  // reflect only categories the user has classified. Unclassified spend stays
+  // visible in the category breakdown table where it can be reassigned.
   const tierTotals: Record<string, number> = { needs: 0, wants: 0, savings: 0 };
   for (const row of byCategory) {
     const tier = getCategoryTier(row.categoryId, row.budgetTier);
     if (tier === "needs" || tier === "wants" || tier === "savings") {
       tierTotals[tier] += row.total;
-    } else {
-      // "other" goes into wants bucket
-      tierTotals.wants += row.total;
     }
   }
 

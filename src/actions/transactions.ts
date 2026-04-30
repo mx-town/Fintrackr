@@ -215,21 +215,22 @@ export async function applyCategoryToSelected(
 
   let updatedCount = 1;
 
-  // 3. Update selected matching transactions
+  // 3. Update selected matching transactions in a single statement
   if (selectedTransactionIds.length > 0) {
-    for (const id of selectedTransactionIds) {
-      await db
-        .update(transactions)
-        .set({
-          categoryId,
-          categorySource: "user",
-          categoryConfidence: 1.0,
-          updatedAt: new Date(),
-        })
-        .where(
-          and(eq(transactions.id, id), eq(transactions.userId, userId))
-        );
-    }
+    await db
+      .update(transactions)
+      .set({
+        categoryId,
+        categorySource: "user",
+        categoryConfidence: 1.0,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(transactions.userId, userId),
+          inArray(transactions.id, selectedTransactionIds)
+        )
+      );
     updatedCount += selectedTransactionIds.length;
   }
 

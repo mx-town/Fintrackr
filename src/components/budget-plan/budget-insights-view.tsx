@@ -98,12 +98,13 @@ export function TierBadge({ tier }: { tier: BudgetTier }) {
 /* ------------------------------------------------------------------ */
 
 interface BudgetInsightsViewProps {
+  userId: string;
   data: BudgetInsightsData;
   budgetScore?: BudgetScore | null;
   moneyFlowData?: MoneyFlowData | null;
 }
 
-export function BudgetInsightsView({ data, budgetScore, moneyFlowData }: BudgetInsightsViewProps) {
+export function BudgetInsightsView({ userId, data, budgetScore, moneyFlowData }: BudgetInsightsViewProps) {
   const { income, tiers, categories, dailyBudget, remainingBudget, daysLeft, todaySpending } =
     data;
 
@@ -280,7 +281,7 @@ export function BudgetInsightsView({ data, budgetScore, moneyFlowData }: BudgetI
       {/* 3. Donut + Category Table */}
       <section aria-label="Spending breakdown" className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <TierDonut tiers={tiers} />
-        <CategoryTable categories={categories} />
+        <CategoryTable userId={userId} categories={categories} />
       </section>
     </div>
   );

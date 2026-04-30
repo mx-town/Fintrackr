@@ -164,6 +164,7 @@ export default async function BudgetPlanPage({
       </div>
 
       <BudgetInsightsView
+          userId={DEFAULT_USER_ID}
           data={data}
           budgetScore={budgetScore}
           moneyFlowData={moneyFlowData}

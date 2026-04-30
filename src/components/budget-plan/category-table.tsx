@@ -31,8 +31,10 @@ const FILTER_OPTIONS: { value: BudgetTier | "all"; label: string }[] = [
 const ASSIGNABLE_TIERS: BudgetTier[] = ["needs", "wants", "savings"];
 
 export function CategoryTable({
+  userId,
   categories,
 }: {
+  userId: string;
   categories: CategoryBreakdown[];
 }) {
   const [tierFilter, setTierFilter] = useState<BudgetTier | "all">("all");
@@ -95,6 +97,7 @@ export function CategoryTable({
                 <TableCell>
                   {cat.tier === "other" && cat.categoryId ? (
                     <TierSelector
+                      userId={userId}
                       categoryId={cat.categoryId}
                       currentTier={cat.tier}
                     />
@@ -133,9 +136,11 @@ export function CategoryTable({
 }
 
 function TierSelector({
+  userId,
   categoryId,
   currentTier,
 }: {
+  userId: string;
   categoryId: string;
   currentTier: BudgetTier;
 }) {
@@ -145,7 +150,7 @@ function TierSelector({
   const handleSelect = (tier: BudgetTier) => {
     setOpen(false);
     startTransition(async () => {
-      await updateCategoryTier(categoryId, tier);
+      await updateCategoryTier(userId, categoryId, tier);
     });
   };
 

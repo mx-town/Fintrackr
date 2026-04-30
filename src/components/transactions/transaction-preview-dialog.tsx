@@ -170,7 +170,7 @@ export function TransactionPreviewDialog({
         {/* No matches */}
         {!loading && matches.length === 0 && (
           <p className="py-4 text-center text-sm text-muted-foreground">
-            Keine weiteren passenden Transaktionen gefunden.
+            No other matching transactions found.
           </p>
         )}
 
@@ -192,7 +192,7 @@ export function TransactionPreviewDialog({
                 {allSelected ? "Deselect all" : "Select all"}
               </button>
               <span className="text-xs text-muted-foreground font-mono-nums">
-                {selected.size} von {matches.length} ausgewahlt
+                {selected.size} of {matches.length} selected
               </span>
             </div>
 
@@ -239,11 +239,11 @@ export function TransactionPreviewDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={handleJustThisOne} disabled={isPending}>
-            Nur diese
+            Just this one
           </Button>
           {matches.length > 0 && (
             <Button onClick={handleApply} disabled={isPending || selected.size === 0}>
-              Anwenden ({selected.size + 1})
+              Apply to {selected.size + 1}
             </Button>
           )}
         </DialogFooter>
