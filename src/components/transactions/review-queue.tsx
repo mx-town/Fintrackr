@@ -1,24 +1,10 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
-import {
-  updateTransactionCategory,
-  bulkCategorizeByTransaction,
-  countMatchingTransactions,
-} from "@/actions/transactions";
+import { useState } from "react";
 import { formatSignedCurrency } from "@/lib/utils";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { TransactionPreviewDialog } from "@/components/transactions/transaction-preview-dialog";
 
 interface Transaction {
   id: string;
@@ -56,9 +42,7 @@ export function ReviewQueue({
 }) {
   const router = useRouter();
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [isPending, startTransition] = useTransition();
 
-  // State for confirm-rule dialog (phase 2)
   const [confirmDialog, setConfirmDialog] = useState<{
     txId: string;
     categoryId: string;
@@ -78,37 +62,7 @@ export function ReviewQueue({
     categoryName: string,
     txDescription: string
   ) {
-    // Open confirmation dialog (phase 2)
     setConfirmDialog({ txId, categoryId, categoryName, txDescription });
-  }
-
-  function handleJustThisOne() {
-    if (!confirmDialog) return;
-    const { txId, categoryId } = confirmDialog;
-    setDismissed((prev) => new Set(prev).add(txId));
-    setConfirmDialog(null);
-    startTransition(async () => {
-      await updateTransactionCategory(userId, txId, categoryId);
-      router.refresh();
-    });
-  }
-
-  function handleApplyToAll() {
-    if (!confirmDialog) return;
-    const { txId, categoryId } = confirmDialog;
-    setDismissed((prev) => new Set(prev).add(txId));
-    setConfirmDialog(null);
-    startTransition(async () => {
-      const { updatedCount } = await bulkCategorizeByTransaction(
-        userId,
-        txId,
-        categoryId
-      );
-      toast.success(
-        `Categorized ${updatedCount} transaction${updatedCount !== 1 ? "s" : ""}`
-      );
-      router.refresh();
-    });
   }
 
   return (
@@ -142,16 +96,18 @@ export function ReviewQueue({
         </div>
       )}
 
-      {/* Confirmation dialog */}
+      {/* Preview dialog */}
       {confirmDialog && (
-        <ConfirmRuleDialog
+        <TransactionPreviewDialog
           userId={userId}
-          txId={confirmDialog.txId}
-          categoryName={confirmDialog.categoryName}
+          transactionId={confirmDialog.txId}
           txDescription={confirmDialog.txDescription}
-          onJustThisOne={handleJustThisOne}
-          onApplyToAll={handleApplyToAll}
-          onCancel={() => setConfirmDialog(null)}
+          categoryId={confirmDialog.categoryId}
+          categoryName={confirmDialog.categoryName}
+          onClose={() => setConfirmDialog(null)}
+          onDone={() => {
+            setDismissed((prev) => new Set(prev).add(confirmDialog.txId));
+          }}
         />
       )}
     </div>
@@ -281,72 +237,5 @@ function ReviewRow({
         </div>
       )}
     </div>
-  );
-}
-
-function ConfirmRuleDialog({
-  userId,
-  txId,
-  categoryName,
-  txDescription,
-  onJustThisOne,
-  onApplyToAll,
-  onCancel,
-}: {
-  userId: string;
-  txId: string;
-  categoryName: string;
-  txDescription: string;
-  onJustThisOne: () => void;
-  onApplyToAll: () => void;
-  onCancel: () => void;
-}) {
-  const [matchInfo, setMatchInfo] = useState<{
-    count: number;
-    matchedBy: string;
-  } | null>(null);
-
-  useEffect(() => {
-    countMatchingTransactions(userId, txId).then(setMatchInfo);
-  }, [userId, txId]);
-
-  const hasMatches = matchInfo && matchInfo.count > 0;
-
-  return (
-    <Dialog open onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Apply category</DialogTitle>
-          <DialogDescription>
-            Assign <strong>{categoryName}</strong> to{" "}
-            <strong>{txDescription}</strong>
-            {hasMatches && (
-              <>
-                {" "}and{" "}
-                <strong>
-                  {matchInfo.count} similar transaction
-                  {matchInfo.count !== 1 ? "s" : ""}
-                </strong>{" "}
-                (matched by {matchInfo.matchedBy})?
-              </>
-            )}
-            {!hasMatches && <>?</>}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={onJustThisOne}>
-            Just this one
-          </Button>
-          {hasMatches && (
-            <Button onClick={onApplyToAll}>
-              Apply to all {matchInfo.count + 1}
-            </Button>
-          )}
-          {matchInfo === null && (
-            <Button disabled>Loading...</Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

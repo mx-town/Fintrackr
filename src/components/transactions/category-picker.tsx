@@ -30,7 +30,7 @@ export function CategoryPicker({
 }: {
   currentCategory: Category | null;
   categories: Category[];
-  onSelect: (categoryId: string) => void;
+  onSelect: (categoryId: string, categoryName: string) => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -74,7 +74,7 @@ export function CategoryPicker({
                   key={cat.id}
                   value={cat.name}
                   onSelect={() => {
-                    onSelect(cat.id);
+                    onSelect(cat.id, cat.name);
                     setOpen(false);
                   }}
                   data-checked={currentCategory?.id === cat.id ? true : undefined}

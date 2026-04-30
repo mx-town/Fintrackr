@@ -1,12 +1,10 @@
 "use client";
 
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { CurrencyDisplay } from "@/components/shared/currency-display";
 import { CategoryPicker } from "@/components/transactions/category-picker";
-import { bulkCategorizeByTransaction } from "@/actions/transactions";
-import { toast } from "sonner";
+import { TransactionPreviewDialog } from "@/components/transactions/transaction-preview-dialog";
 import { format } from "date-fns";
 
 interface Transaction {
@@ -44,27 +42,20 @@ export function TransactionTable({
   transactions: Transaction[];
   categories: Category[];
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [pendingChange, setPendingChange] = useState<{
+    txId: string;
+    txDescription: string;
+    categoryId: string;
+    categoryName: string;
+  } | null>(null);
 
-  function handleCategoryChange(txId: string, categoryId: string) {
-    startTransition(async () => {
-      try {
-        const { updatedCount } = await bulkCategorizeByTransaction(
-          "local",
-          txId,
-          categoryId
-        );
-        if (updatedCount > 1) {
-          toast.success(`Updated ${updatedCount} matching transactions`);
-        } else {
-          toast.success("Category updated");
-        }
-        router.refresh();
-      } catch {
-        toast.error("Failed to update category");
-      }
-    });
+  function handleCategoryChange(
+    txId: string,
+    categoryId: string,
+    categoryName: string,
+    txDescription: string
+  ) {
+    setPendingChange({ txId, categoryId, categoryName, txDescription });
   }
 
   return (
@@ -87,7 +78,7 @@ export function TransactionTable({
 
       {/* Table body */}
       <div className="divide-y divide-border/30">
-        {transactions.map(({ transaction: tx, category }, i) => (
+        {transactions.map(({ transaction: tx, category }) => (
           <div
             key={tx.id}
             className="grid grid-cols-[100px_1fr_140px_120px] gap-4 px-5 py-3.5 items-center transition-colors hover:bg-muted/20 group"
@@ -109,7 +100,14 @@ export function TransactionTable({
               <CategoryPicker
                 currentCategory={category}
                 categories={categories}
-                onSelect={(catId) => handleCategoryChange(tx.id, catId)}
+                onSelect={(catId, catName) =>
+                  handleCategoryChange(
+                    tx.id,
+                    catId,
+                    catName,
+                    tx.counterpartyName || tx.description
+                  )
+                }
               />
               {tx.categoryConfidence != null &&
                 tx.categoryConfidence <= 0.6 &&
@@ -137,6 +135,18 @@ export function TransactionTable({
           </div>
         )}
       </div>
+
+      {/* Preview dialog */}
+      {pendingChange && (
+        <TransactionPreviewDialog
+          userId="local"
+          transactionId={pendingChange.txId}
+          txDescription={pendingChange.txDescription}
+          categoryId={pendingChange.categoryId}
+          categoryName={pendingChange.categoryName}
+          onClose={() => setPendingChange(null)}
+        />
+      )}
     </div>
   );
 }
