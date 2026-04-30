@@ -77,9 +77,14 @@ export function SpendingDonut({
     categoryId: d.categoryId,
   }));
 
+  const otherCategoryIds: string[] = [];
   if (sorted.length > 6) {
-    const otherTotal = sorted.slice(6).reduce((sum, d) => sum + d.total, 0);
-    const otherCount = sorted.slice(6).reduce((sum, d) => sum + d.count, 0);
+    const otherSlice = sorted.slice(6);
+    const otherTotal = otherSlice.reduce((sum, d) => sum + d.total, 0);
+    const otherCount = otherSlice.reduce((sum, d) => sum + d.count, 0);
+    for (const d of otherSlice) {
+      if (d.categoryId) otherCategoryIds.push(d.categoryId);
+    }
     chartData.push({
       name: "Other",
       icon: "\u{1F4CB}",
@@ -91,9 +96,23 @@ export function SpendingDonut({
   }
 
   const handleCategoryClick = (item: ChartEntry) => {
-    if (item.name === "Other" || !onDrilldown || !item.categoryId) return;
+    if (!onDrilldown) return;
     const range = periodRanges?.[period];
     if (!range) return;
+
+    if (item.name === "Other" && otherCategoryIds.length > 0) {
+      onDrilldown({
+        title: `\u{1F4CB} Other`,
+        subtitle: `${item.count} expense transactions`,
+        type: "expense",
+        categoryIds: otherCategoryIds,
+        startDate: range.start,
+        endDate: range.end,
+      });
+      return;
+    }
+
+    if (!item.categoryId) return;
     onDrilldown({
       title: `${item.icon} ${item.name}`,
       subtitle: `${item.count} expense transactions`,
