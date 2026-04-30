@@ -18,7 +18,7 @@ interface ChartCardBadge {
 }
 
 interface ChartCardProps {
-  title: string;
+  title: ReactNode;
   subtitle?: string;
   badge?: ChartCardBadge;
   action?: ReactNode;
