@@ -6,6 +6,10 @@ import { ensureDb, DEFAULT_USER_ID } from "@/lib/db/init";
 import { nanoid } from "nanoid";
 import { eq } from "drizzle-orm";
 
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+const ALLOWED_EXTENSIONS = ["csv", "json", "pdf"] as const;
+type AllowedExtension = (typeof ALLOWED_EXTENSIONS)[number];
+
 export async function POST(request: NextRequest) {
   try {
     await ensureDb();
@@ -15,6 +19,31 @@ export async function POST(request: NextRequest) {
     if (!file) {
       return NextResponse.json(
         { success: false, errors: ["No file provided"] },
+        { status: 400 }
+      );
+    }
+
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      return NextResponse.json(
+        {
+          success: false,
+          errors: [
+            `File too large. Maximum size is ${MAX_FILE_SIZE_BYTES / 1024 / 1024} MB.`,
+          ],
+        },
+        { status: 413 }
+      );
+    }
+
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    if (!ALLOWED_EXTENSIONS.includes(ext as AllowedExtension)) {
+      return NextResponse.json(
+        {
+          success: false,
+          errors: [
+            `Unsupported file type. Allowed: ${ALLOWED_EXTENSIONS.join(", ")}.`,
+          ],
+        },
         { status: 400 }
       );
     }
@@ -139,7 +168,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[Upload API]", error);
     return NextResponse.json(
-      { success: false, errors: [(error as Error).message] },
+      {
+        success: false,
+        errors: ["Upload failed. Please check the file and try again."],
+      },
       { status: 500 }
     );
   }
