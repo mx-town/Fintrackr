@@ -139,22 +139,26 @@ export async function getMatchingTransactions(
 
   if (!tx) return { matches: [], matchedBy: "" };
 
-  const matchConditions = [];
+  // Prefer counterparty equality when available — it's the exact merchant
+  // string the parser captured and is far more reliable than a substring
+  // match against the raw description. Description-substring matching is
+  // reserved for rows that lack any counterparty data, where it's the
+  // only signal we have.
+  let matchCondition;
   let matchedBy = "";
 
   if (tx.counterpartyName) {
-    matchConditions.push(eq(transactions.counterpartyName, tx.counterpartyName));
+    matchCondition = eq(transactions.counterpartyName, tx.counterpartyName);
     matchedBy = "counterparty";
+  } else {
+    const normalized = normalizeMerchant(tx.description);
+    if (normalized.length >= 4) {
+      matchCondition = like(transactions.description, `%${normalized}%`);
+      matchedBy = "description";
+    }
   }
 
-  const normalized = normalizeMerchant(tx.description);
-  if (normalized && normalized.length >= 3) {
-    matchConditions.push(like(transactions.description, `%${normalized}%`));
-    if (!matchedBy) matchedBy = "description";
-    else matchedBy = "counterparty & description";
-  }
-
-  if (matchConditions.length === 0) return { matches: [], matchedBy: "" };
+  if (!matchCondition) return { matches: [], matchedBy: "" };
 
   const results = await db
     .select({
@@ -168,7 +172,7 @@ export async function getMatchingTransactions(
         eq(transactions.userId, userId),
         isNull(transactions.deletedAt),
         ne(transactions.id, transactionId),
-        or(...matchConditions)
+        matchCondition
       )
     )
     .orderBy(desc(transactions.date))
