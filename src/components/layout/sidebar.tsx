@@ -13,6 +13,7 @@ import {
   Building2,
   Settings,
   HelpCircle,
+  Calculator,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
   { href: "/upload", label: "Upload", icon: Upload },
   { href: "/review", label: "Review", icon: HelpCircle },
   { href: "/budgets", label: "Budgets", icon: PiggyBank },
+  { href: "/budget-plan", label: "Budget Plan", icon: Calculator },
   { href: "/categories", label: "Categories", icon: Tags },
   { href: "/insights", label: "Insights", icon: Lightbulb },
   { href: "/accounts", label: "Accounts", icon: Building2 },
