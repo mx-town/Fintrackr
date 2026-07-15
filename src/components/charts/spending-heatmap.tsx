@@ -6,13 +6,23 @@ import { nivoTheme } from "@/components/charts/nivo-theme";
 
 interface HeatmapSeries {
   id: string; // day of week
-  data: { x: string; y: number }[]; // hour -> value
+  data: { x: string; y: number }[]; // month -> value
 }
 
-export function SpendingHeatmap({ data }: { data: HeatmapSeries[] }) {
+export function SpendingHeatmap({
+  data,
+  title = "When Do You Spend?",
+  subtitle = "Spending patterns by day and time",
+  footer,
+}: {
+  data: HeatmapSeries[];
+  title?: string;
+  subtitle?: string;
+  footer?: React.ReactNode;
+}) {
   if (data.length === 0) {
     return (
-      <ChartCard title="When Do You Spend?" subtitle="Spending patterns by day and time">
+      <ChartCard title={title} subtitle={subtitle}>
         <div className="flex h-64 flex-col items-center justify-center text-muted-foreground">
           <span className="text-3xl">🕐</span>
           <p className="mt-2 text-sm">No timing data available</p>
@@ -22,7 +32,7 @@ export function SpendingHeatmap({ data }: { data: HeatmapSeries[] }) {
   }
 
   return (
-    <ChartCard title="When Do You Spend?" subtitle="Spending patterns by day and time">
+    <ChartCard title={title} subtitle={subtitle}>
       <div className="h-64">
         <ResponsiveHeatMap
           data={data}
@@ -42,6 +52,7 @@ export function SpendingHeatmap({ data }: { data: HeatmapSeries[] }) {
           animate
         />
       </div>
+      {footer ? <div className="mt-3 text-sm text-muted-foreground">{footer}</div> : null}
     </ChartCard>
   );
 }

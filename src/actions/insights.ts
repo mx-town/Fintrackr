@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { transactions, categories } from "@/lib/db/schema";
 import { eq, and, gte, lte, sql, isNull, desc } from "drizzle-orm";
 import { buildMoneyFlow } from "@/lib/insights/money-flow";
+import { buildWeekdayMatrix, weekdayTakeaway } from "@/lib/insights/weekday-matrix";
 
 export async function getDashboardData(
   userId: string,
@@ -220,4 +221,29 @@ export async function getMoneyFlow(
     .map((r) => ({ name: r.categoryName ?? "Uncategorized", totalCents: r.total }));
 
   return buildMoneyFlow(incomes, expenses);
+}
+
+/**
+ * Weekday × month average spending heatmap data + takeaway line.
+ */
+export async function getWeekdayMatrix(
+  userId: string,
+  startDate: Date,
+  endDate: Date
+) {
+  const rows = await db
+    .select({ date: transactions.date, amountCents: transactions.amountCents })
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.userId, userId),
+        eq(transactions.type, "expense"),
+        gte(transactions.date, startDate),
+        lte(transactions.date, endDate),
+        isNull(transactions.deletedAt)
+      )
+    );
+
+  const matrix = buildWeekdayMatrix(rows, startDate, endDate);
+  return { matrix, takeaway: weekdayTakeaway(matrix) };
 }

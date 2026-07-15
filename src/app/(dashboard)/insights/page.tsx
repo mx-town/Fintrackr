@@ -3,12 +3,14 @@ import { SpendingCalendar } from "@/components/charts/calendar-heatmap";
 import { SpendingTreemap } from "@/components/charts/treemap";
 import { CategorySunburst } from "@/components/charts/sunburst";
 import { MoneyFlowSankey } from "@/components/charts/sankey";
+import { SpendingHeatmap } from "@/components/charts/spending-heatmap";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { Upload } from "lucide-react";
-import { getCalendarData, getCategoryHierarchy, getMoneyFlow } from "@/actions/insights";
+import { getCalendarData, getCategoryHierarchy, getMoneyFlow, getWeekdayMatrix } from "@/actions/insights";
 import { ensureDb, DEFAULT_USER_ID } from "@/lib/db/init";
 import { parseDateParam } from "@/lib/date-params";
 import { startOfYear, endOfYear, format } from "date-fns";
+import { formatCurrency } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -29,10 +31,11 @@ export default async function InsightsPage({
   const calendarFrom = startOfYear(endDate);
   const calendarTo = endOfYear(endDate);
 
-  const [calendarData, hierarchy, moneyFlow] = await Promise.all([
+  const [calendarData, hierarchy, moneyFlow, weekday] = await Promise.all([
     getCalendarData(DEFAULT_USER_ID, calendarYear),
     getCategoryHierarchy(DEFAULT_USER_ID, startDate, endDate),
     getMoneyFlow(DEFAULT_USER_ID, startDate, endDate),
+    getWeekdayMatrix(DEFAULT_USER_ID, startDate, endDate),
   ]);
 
   const hasData =
@@ -96,13 +99,24 @@ export default async function InsightsPage({
       {/* Sankey + Time Heatmap */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <MoneyFlowSankey data={moneyFlow} />
-        <div className="group relative overflow-hidden rounded-2xl border border-border/50 border-dashed bg-card/50 p-6">
-          <div className="flex h-48 flex-col items-center justify-center text-muted-foreground">
-            <span className="text-3xl">🕐</span>
-            <p className="mt-2 text-sm font-medium">Spending by Time</p>
-            <p className="mt-1 text-xs text-muted-foreground/70">Coming soon</p>
-          </div>
-        </div>
+        <SpendingHeatmap
+          data={weekday.matrix}
+          title="Which days cost you money?"
+          subtitle="Average spending by weekday and month"
+          footer={
+            weekday.takeaway && weekday.takeaway.most.avg > 0 ? (
+              <span>
+                <strong className="text-foreground">
+                  {weekday.takeaway.most.day}
+                </strong>{" "}
+                is your most expensive day —{" "}
+                {formatCurrency(Math.round(weekday.takeaway.most.avg * 100))} on
+                average vs. {formatCurrency(Math.round(weekday.takeaway.least.avg * 100))}{" "}
+                on {weekday.takeaway.least.day}.
+              </span>
+            ) : undefined
+          }
+        />
       </div>
     </div>
   );
