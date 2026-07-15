@@ -2,9 +2,10 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { SpendingCalendar } from "@/components/charts/calendar-heatmap";
 import { SpendingTreemap } from "@/components/charts/treemap";
 import { CategorySunburst } from "@/components/charts/sunburst";
+import { MoneyFlowSankey } from "@/components/charts/sankey";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { Upload } from "lucide-react";
-import { getCalendarData, getCategoryHierarchy } from "@/actions/insights";
+import { getCalendarData, getCategoryHierarchy, getMoneyFlow } from "@/actions/insights";
 import { ensureDb, DEFAULT_USER_ID } from "@/lib/db/init";
 import { parseDateParam } from "@/lib/date-params";
 import { startOfYear, endOfYear, format } from "date-fns";
@@ -28,9 +29,10 @@ export default async function InsightsPage({
   const calendarFrom = startOfYear(endDate);
   const calendarTo = endOfYear(endDate);
 
-  const [calendarData, hierarchy] = await Promise.all([
+  const [calendarData, hierarchy, moneyFlow] = await Promise.all([
     getCalendarData(DEFAULT_USER_ID, calendarYear),
     getCategoryHierarchy(DEFAULT_USER_ID, startDate, endDate),
+    getMoneyFlow(DEFAULT_USER_ID, startDate, endDate),
   ]);
 
   const hasData =
@@ -91,15 +93,9 @@ export default async function InsightsPage({
         <CategorySunburst data={hierarchy.sunburstData} />
       </div>
 
-      {/* Coming Soon: Sankey + Time Heatmap */}
+      {/* Sankey + Time Heatmap */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="group relative overflow-hidden rounded-2xl border border-border/50 border-dashed bg-card/50 p-6">
-          <div className="flex h-48 flex-col items-center justify-center text-muted-foreground">
-            <span className="text-3xl">🔀</span>
-            <p className="mt-2 text-sm font-medium">Money Flow</p>
-            <p className="mt-1 text-xs text-muted-foreground/70">Coming soon</p>
-          </div>
-        </div>
+        <MoneyFlowSankey data={moneyFlow} />
         <div className="group relative overflow-hidden rounded-2xl border border-border/50 border-dashed bg-card/50 p-6">
           <div className="flex h-48 flex-col items-center justify-center text-muted-foreground">
             <span className="text-3xl">🕐</span>

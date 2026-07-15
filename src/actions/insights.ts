@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { transactions, categories } from "@/lib/db/schema";
 import { eq, and, gte, lte, sql, isNull, desc } from "drizzle-orm";
+import { buildMoneyFlow } from "@/lib/insights/money-flow";
 
 export async function getDashboardData(
   userId: string,
@@ -183,4 +184,40 @@ export async function getCategoryHierarchy(
   };
 
   return { treemapData, sunburstData };
+}
+
+/**
+ * Income → Budget → expense-category flows for the Sankey.
+ */
+export async function getMoneyFlow(
+  userId: string,
+  startDate: Date,
+  endDate: Date
+) {
+  const rows = await db
+    .select({
+      type: transactions.type,
+      categoryName: categories.name,
+      total: sql<number>`SUM(${transactions.amountCents})`.as("total"),
+    })
+    .from(transactions)
+    .leftJoin(categories, eq(transactions.categoryId, categories.id))
+    .where(
+      and(
+        eq(transactions.userId, userId),
+        gte(transactions.date, startDate),
+        lte(transactions.date, endDate),
+        isNull(transactions.deletedAt)
+      )
+    )
+    .groupBy(transactions.type, categories.name);
+
+  const incomes = rows
+    .filter((r) => r.type === "income")
+    .map((r) => ({ name: r.categoryName ?? "Other income", totalCents: r.total }));
+  const expenses = rows
+    .filter((r) => r.type === "expense")
+    .map((r) => ({ name: r.categoryName ?? "Uncategorized", totalCents: r.total }));
+
+  return buildMoneyFlow(incomes, expenses);
 }
