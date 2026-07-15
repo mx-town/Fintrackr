@@ -58,7 +58,7 @@ export default async function InsightsPage({
               {periodLabel} · spending patterns and category analysis
             </p>
           </div>
-          <DateRangePicker />
+          <DateRangePicker defaultFrom={startOfYear(now)} defaultTo={endOfYear(now)} />
         </div>
         <EmptyState
           icon={<Upload className="h-8 w-8 text-muted-foreground" />}
@@ -82,7 +82,7 @@ export default async function InsightsPage({
             {periodLabel} · spending patterns and category analysis
           </p>
         </div>
-        <DateRangePicker />
+        <DateRangePicker defaultFrom={startOfYear(now)} defaultTo={endOfYear(now)} />
       </div>
 
       {!panel.hidden && <InsightPanel insights={panel.insights} />}
@@ -108,16 +108,26 @@ export default async function InsightsPage({
           title="Which days cost you money?"
           subtitle="Average spending by weekday and month"
           footer={
-            weekday.takeaway && weekday.takeaway.most.avg > 0 ? (
-              <span>
-                <strong className="text-foreground">
-                  {weekday.takeaway.most.day}
-                </strong>{" "}
-                is your most expensive day —{" "}
-                {formatCurrency(Math.round(weekday.takeaway.most.avg * 100))} on
-                average vs. {formatCurrency(Math.round(weekday.takeaway.least.avg * 100))}{" "}
-                on {weekday.takeaway.least.day}.
-              </span>
+            weekday.takeaway ? (
+              weekday.takeaway.most.day === weekday.takeaway.least.day ? (
+                <span>
+                  <strong className="text-foreground">
+                    {weekday.takeaway.most.day}
+                  </strong>{" "}
+                  is your most expensive day —{" "}
+                  {formatCurrency(Math.round(weekday.takeaway.most.avg * 100))} on average.
+                </span>
+              ) : (
+                <span>
+                  <strong className="text-foreground">
+                    {weekday.takeaway.most.day}
+                  </strong>{" "}
+                  is your most expensive day —{" "}
+                  {formatCurrency(Math.round(weekday.takeaway.most.avg * 100))} on
+                  average vs. {formatCurrency(Math.round(weekday.takeaway.least.avg * 100))}{" "}
+                  on {weekday.takeaway.least.day}.
+                </span>
+              )
             ) : undefined
           }
         />

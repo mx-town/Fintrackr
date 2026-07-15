@@ -44,16 +44,22 @@ const PRESETS = [
   },
 ];
 
-export function DateRangePicker() {
+export function DateRangePicker({
+  defaultFrom,
+  defaultTo,
+}: {
+  defaultFrom?: Date;
+  defaultTo?: Date;
+} = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [date, setDate] = useState<{ from: Date; to: Date }>({
     from: searchParams.get("from")
       ? new Date(searchParams.get("from")!)
-      : startOfMonth(new Date()),
+      : (defaultFrom ?? startOfMonth(new Date())),
     to: searchParams.get("to")
       ? new Date(searchParams.get("to")!)
-      : endOfMonth(new Date()),
+      : (defaultTo ?? endOfMonth(new Date())),
   });
 
   const applyRange = (from: Date, to: Date) => {
