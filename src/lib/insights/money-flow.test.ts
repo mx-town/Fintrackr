@@ -58,4 +58,26 @@ describe("buildMoneyFlow", () => {
       value: 50,
     });
   });
+
+  it("nets categories on both sides (refunds) so the graph never cycles", () => {
+    const flow = buildMoneyFlow(
+      [inc("Salary", 100000), inc("Groceries", 2000)], // 20 € refund
+      [inc("Groceries", 30000)]
+    );
+    expect(flow.links.find((l) => l.source === "Groceries")).toBeUndefined();
+    expect(flow.links).toContainEqual({ source: "Budget", target: "Groceries", value: 280 });
+    // savings = 1000 − 280
+    expect(flow.links).toContainEqual({ source: "Budget", target: "Savings", value: 720 });
+  });
+
+  it("keeps the income remainder when inflows exceed the category's expenses", () => {
+    const flow = buildMoneyFlow(
+      [inc("Transfers", 50000)],
+      [inc("Transfers", 30000), inc("Rent", 10000)]
+    );
+    expect(flow.links).toContainEqual({ source: "Transfers", target: "Budget", value: 200 });
+    expect(
+      flow.links.find((l) => l.source === "Budget" && l.target === "Transfers")
+    ).toBeUndefined();
+  });
 });

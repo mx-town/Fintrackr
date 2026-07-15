@@ -28,8 +28,40 @@ export function buildMoneyFlow(
   incomes: FlowInput[],
   expenses: FlowInput[]
 ): SankeyData {
-  const activeIncomes = incomes.filter((i) => i.totalCents > 0);
-  const activeExpenses = expenses.filter((e) => e.totalCents > 0);
+  const incomeByName = new Map<string, number>();
+  for (const i of incomes) {
+    if (i.totalCents > 0)
+      incomeByName.set(i.name, (incomeByName.get(i.name) ?? 0) + i.totalCents);
+  }
+  const expenseByName = new Map<string, number>();
+  for (const e of expenses) {
+    if (e.totalCents > 0)
+      expenseByName.set(e.name, (expenseByName.get(e.name) ?? 0) + e.totalCents);
+  }
+
+  // Net categories present on both sides (refunds, two-way transfers):
+  // a node feeding Budget AND being fed by Budget makes the graph cyclic,
+  // which the sankey rejects at render time.
+  for (const [name, incomeCents] of incomeByName) {
+    const expenseCents = expenseByName.get(name);
+    if (expenseCents === undefined) continue;
+    if (incomeCents >= expenseCents) {
+      expenseByName.delete(name);
+      const rest = incomeCents - expenseCents;
+      if (rest > 0) incomeByName.set(name, rest);
+      else incomeByName.delete(name);
+    } else {
+      expenseByName.set(name, expenseCents - incomeCents);
+      incomeByName.delete(name);
+    }
+  }
+
+  const activeIncomes: FlowInput[] = [...incomeByName].map(
+    ([name, totalCents]) => ({ name, totalCents })
+  );
+  const activeExpenses: FlowInput[] = [...expenseByName].map(
+    ([name, totalCents]) => ({ name, totalCents })
+  );
   if (activeIncomes.length === 0 && activeExpenses.length === 0) {
     return { nodes: [], links: [] };
   }
