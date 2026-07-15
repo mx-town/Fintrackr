@@ -21,7 +21,8 @@ describe("categoryMovers", () => {
 
   it("reports decreases too", () => {
     const out = categoryMovers([
-      { key: "c1", name: "Groceries", currentCents: 30280, previousCents: 34400 },
+      // −24.4 % and −84,00 € — above both thresholds
+      { key: "c1", name: "Groceries", currentCents: 26000, previousCents: 34400 },
     ]);
     expect(out[0].kind).toBe("decrease");
   });

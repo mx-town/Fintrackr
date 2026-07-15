@@ -51,9 +51,7 @@ export function categoryMovers(totals: CategoryPeriodTotal[]): Insight[] {
     }
 
     const pct = (delta / t.previousCents) * 100;
-    // For increases, require both the absolute threshold AND the % threshold.
-    // For decreases, the absolute threshold alone is sufficient.
-    if (delta > 0 && Math.abs(pct) < MIN_PERCENT) continue;
+    if (Math.abs(pct) < MIN_PERCENT) continue;
 
     out.push({
       kind: delta > 0 ? "increase" : "decrease",
