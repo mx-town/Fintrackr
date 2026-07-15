@@ -11,6 +11,7 @@ import {
 import { CalendarIcon } from "lucide-react";
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear } from "date-fns";
 import { useState } from "react";
+import { parseDateParam } from "@/lib/date-params";
 import { cn } from "@/lib/utils";
 
 const PRESETS = [
@@ -54,12 +55,14 @@ export function DateRangePicker({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [date, setDate] = useState<{ from: Date; to: Date }>({
-    from: searchParams.get("from")
-      ? new Date(searchParams.get("from")!)
-      : (defaultFrom ?? startOfMonth(new Date())),
-    to: searchParams.get("to")
-      ? new Date(searchParams.get("to")!)
-      : (defaultTo ?? endOfMonth(new Date())),
+    from:
+      parseDateParam(searchParams.get("from") ?? undefined) ??
+      defaultFrom ??
+      startOfMonth(new Date()),
+    to:
+      parseDateParam(searchParams.get("to") ?? undefined) ??
+      defaultTo ??
+      endOfMonth(new Date()),
   });
 
   const applyRange = (from: Date, to: Date) => {
