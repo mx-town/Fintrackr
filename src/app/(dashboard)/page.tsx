@@ -6,18 +6,11 @@ import { db } from "@/lib/db";
 import { transactions, categories } from "@/lib/db/schema";
 import { ensureDb, DEFAULT_USER_ID } from "@/lib/db/init";
 import { eq, and, gte, lte, isNull, desc, asc, count } from "drizzle-orm";
-import { startOfMonth, endOfMonth, subMonths, startOfYear, format, parseISO, isValid } from "date-fns";
+import { startOfMonth, endOfMonth, subMonths, startOfYear, format } from "date-fns";
 import { computeNetSpending } from "@/lib/spending/net-spending";
+import { parseDateParam } from "@/lib/date-params";
 
 export const dynamic = "force-dynamic";
-
-const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-function parseDateParam(value: string | undefined): Date | null {
-  if (!value || !ISO_DATE_RE.test(value)) return null;
-  const parsed = parseISO(value);
-  return isValid(parsed) ? parsed : null;
-}
 
 export default async function DashboardPage({
   searchParams,
