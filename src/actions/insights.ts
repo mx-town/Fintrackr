@@ -5,6 +5,14 @@ import { transactions, categories } from "@/lib/db/schema";
 import { eq, and, gte, lte, sql, isNull, desc } from "drizzle-orm";
 import { buildMoneyFlow } from "@/lib/insights/money-flow";
 import { buildWeekdayMatrix, weekdayTakeaway } from "@/lib/insights/weekday-matrix";
+import {
+  categoryMovers,
+  unusualExpenses,
+  newCounterparties,
+  selectInsights,
+  type CategoryPeriodTotal,
+  type TxSummary,
+} from "@/lib/insights/rules";
 
 export async function getDashboardData(
   userId: string,
@@ -246,4 +254,108 @@ export async function getWeekdayMatrix(
 
   const matrix = buildWeekdayMatrix(rows, startDate, endDate);
   return { matrix, takeaway: weekdayTakeaway(matrix) };
+}
+
+const MIN_PREVIOUS_TX = 5;
+
+/**
+ * Rule-based "What stands out" insights: selected period vs. the previous
+ * period of equal length.
+ */
+export async function getInsightPanelData(
+  userId: string,
+  startDate: Date,
+  endDate: Date
+) {
+  const periodMs = endDate.getTime() - startDate.getTime();
+  const prevEnd = new Date(startDate.getTime() - 1);
+  const prevStart = new Date(prevEnd.getTime() - periodMs);
+
+  const fetchPeriod = (start: Date, end: Date) =>
+    db
+      .select({
+        description: transactions.description,
+        counterpartyName: transactions.counterpartyName,
+        amountCents: transactions.amountCents,
+        categoryId: transactions.categoryId,
+        categoryName: categories.name,
+      })
+      .from(transactions)
+      .leftJoin(categories, eq(transactions.categoryId, categories.id))
+      .where(
+        and(
+          eq(transactions.userId, userId),
+          eq(transactions.type, "expense"),
+          gte(transactions.date, start),
+          lte(transactions.date, end),
+          isNull(transactions.deletedAt)
+        )
+      );
+
+  const [currentRows, prevRows] = await Promise.all([
+    fetchPeriod(startDate, endDate),
+    fetchPeriod(prevStart, prevEnd),
+  ]);
+
+  if (prevRows.length < MIN_PREVIOUS_TX) {
+    return { insights: [], hidden: true as const };
+  }
+
+  const key = (r: { categoryId: string | null }) => r.categoryId ?? "uncategorized";
+
+  const totalsMap = new Map<string, CategoryPeriodTotal>();
+  for (const r of currentRows) {
+    const k = key(r);
+    const e = totalsMap.get(k) ?? {
+      key: k,
+      name: r.categoryName ?? "Uncategorized",
+      currentCents: 0,
+      previousCents: 0,
+    };
+    e.currentCents += r.amountCents;
+    totalsMap.set(k, e);
+  }
+  for (const r of prevRows) {
+    const k = key(r);
+    const e = totalsMap.get(k) ?? {
+      key: k,
+      name: r.categoryName ?? "Uncategorized",
+      currentCents: 0,
+      previousCents: 0,
+    };
+    e.previousCents += r.amountCents;
+    totalsMap.set(k, e);
+  }
+
+  // Median per category across BOTH periods (typical transaction size).
+  const byCat = new Map<string, number[]>();
+  for (const r of [...currentRows, ...prevRows]) {
+    const k = key(r);
+    if (!byCat.has(k)) byCat.set(k, []);
+    byCat.get(k)!.push(r.amountCents);
+  }
+  const medians = new Map<string, number>();
+  for (const [k, values] of byCat) {
+    const sorted = [...values].sort((a, b) => a - b);
+    medians.set(k, sorted[Math.floor(sorted.length / 2)]);
+  }
+
+  const toSummary = (r: (typeof currentRows)[number]): TxSummary => ({
+    description: r.description,
+    counterpartyName: r.counterpartyName,
+    amountCents: r.amountCents,
+    categoryKey: key(r),
+  });
+
+  const prevNames = new Set(
+    prevRows.map((r) => r.counterpartyName).filter((n): n is string => !!n)
+  );
+
+  const insights = selectInsights([
+    ...categoryMovers([...totalsMap.values()]),
+    ...unusualExpenses(currentRows.map(toSummary), medians),
+    ...newCounterparties(currentRows.map(toSummary), prevNames),
+  ]);
+
+  return { insights, hidden: insights.length === 0 };
 }

@@ -6,7 +6,8 @@ import { MoneyFlowSankey } from "@/components/charts/sankey";
 import { SpendingHeatmap } from "@/components/charts/spending-heatmap";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { Upload } from "lucide-react";
-import { getCalendarData, getCategoryHierarchy, getMoneyFlow, getWeekdayMatrix } from "@/actions/insights";
+import { getCalendarData, getCategoryHierarchy, getMoneyFlow, getWeekdayMatrix, getInsightPanelData } from "@/actions/insights";
+import { InsightPanel } from "@/components/insights/insight-panel";
 import { ensureDb, DEFAULT_USER_ID } from "@/lib/db/init";
 import { parseDateParam } from "@/lib/date-params";
 import { startOfYear, endOfYear, format } from "date-fns";
@@ -31,11 +32,12 @@ export default async function InsightsPage({
   const calendarFrom = startOfYear(endDate);
   const calendarTo = endOfYear(endDate);
 
-  const [calendarData, hierarchy, moneyFlow, weekday] = await Promise.all([
+  const [calendarData, hierarchy, moneyFlow, weekday, panel] = await Promise.all([
     getCalendarData(DEFAULT_USER_ID, calendarYear),
     getCategoryHierarchy(DEFAULT_USER_ID, startDate, endDate),
     getMoneyFlow(DEFAULT_USER_ID, startDate, endDate),
     getWeekdayMatrix(DEFAULT_USER_ID, startDate, endDate),
+    getInsightPanelData(DEFAULT_USER_ID, startDate, endDate),
   ]);
 
   const hasData =
@@ -82,6 +84,8 @@ export default async function InsightsPage({
         </div>
         <DateRangePicker />
       </div>
+
+      {!panel.hidden && <InsightPanel insights={panel.insights} />}
 
       {/* Full-year calendar heatmap */}
       <SpendingCalendar
