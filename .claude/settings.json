@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit -m ' *)",
+      "Bash(git add *)",
+      "Bash(grep -n \"sql\\\\|\\\\\\\\bne\\(\" src/actions/transactions.ts)",
+      "Bash(npx tsc *)",
+      "Bash(grep -n \"\\\\\\\\bor\\(\" src/actions/transactions.ts)"
+    ]
+  }
+}
